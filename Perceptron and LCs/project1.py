@@ -147,7 +147,7 @@ def perceptron(feature_matrix, labels, T):
     for t in range(T):
         for i in get_order(n):
             # Your code here
-            cnt += 1
+            # cnt += 1
             current_theta, current_theta_0 = perceptron_single_step_update(feature_matrix[i], labels[i], current_theta, current_theta_0)
             # if cnt >= 19990:
             #     print(f"Perceptron at {cnt} out of 20000: {current_theta, current_theta_0}")
@@ -202,7 +202,7 @@ def average_perceptron(feature_matrix, labels, T):
     for t in range(T):
         for i in get_order(n):
             # Your code here
-            cnt += 1
+            # cnt += 1
             current_theta, current_theta_0 = perceptron_single_step_update(feature_matrix[i], labels[i], current_theta,
                                                                            current_theta_0)
             final_theta += current_theta
@@ -331,6 +331,26 @@ def classify(feature_matrix, theta, theta_0):
     be considered a positive classification.
     """
     # Your code here
+    # np.dot(current_theta, feature_vector) + current_theta_0
+    predicted_raw = feature_matrix.dot(theta) + theta_0
+    # predicted = (predicted_raw > 0) * 2 - 1
+    # ^ didn't work online..
+
+    predicted = np.zeros(len(predicted_raw))
+
+    idx = 0
+    for x in predicted_raw:
+        if predicted_raw[idx] > 0:
+            predicted[idx] = 1
+        elif predicted_raw[idx] <0:
+            predicted[idx] = -1
+        else:
+            predicted[idx] = -1
+
+        idx += 1
+
+    return predicted
+
     raise NotImplementedError
 #pragma: coderesponse end
 
@@ -369,6 +389,16 @@ def classifier_accuracy(
     accuracy of the trained classifier on the validation data.
     """
     # Your code here
+    theta, theta_0 = classifier(train_feature_matrix, train_labels, **kwargs)
+
+    train_pred = classify(train_feature_matrix, theta, theta_0)
+    val_pred = classify(val_feature_matrix, theta, theta_0)
+
+    train_acc = sum(train_pred == train_labels) / len(train_labels)
+    val_acc = sum(val_pred == val_labels) / len(val_labels)
+
+    return train_acc, val_acc
+
     raise NotImplementedError
 #pragma: coderesponse end
 
@@ -397,10 +427,17 @@ def bag_of_words(texts):
     Feel free to change this code as guided by Problem 9
     """
     # Your code here
+
     dictionary = {} # maps word to unique index
+    stopwords = []
+    for stopword in open("stopwords.txt"):
+        stopwords.append(stopword.strip())
+
     for text in texts:
         word_list = extract_words(text)
         for word in word_list:
+            if word in stopwords:
+                continue
             if word not in dictionary:
                 dictionary[word] = len(dictionary)
     return dictionary
@@ -427,7 +464,8 @@ def extract_bow_feature_vectors(reviews, dictionary):
         word_list = extract_words(text)
         for word in word_list:
             if word in dictionary:
-                feature_matrix[i, dictionary[word]] = 1
+                # feature_matrix[i, dictionary[word]] = 1
+                feature_matrix[i, dictionary[word]] = word_list.count(word)
     return feature_matrix
 #pragma: coderesponse end
 
