@@ -5,6 +5,7 @@ from utils import *
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.sparse as sparse
+from scipy.special import softmax
 
 
 def augment_feature_vector(X):
@@ -33,15 +34,21 @@ def compute_probabilities(X, theta, temp_parameter):
     """
     #YOUR CODE HERE
 
-    trm = np.matmul(theta, X.transpose())/temp_parameter # (k,n)
+    # trm = np.matmul(theta, X.transpose())/temp_parameter # (k,n)
+    trm = theta @ (X.T) / temp_parameter
+
 
     #print(theta,X,trm)
 
-    H = np.zeros(trm.shape)
+    # H = np.zeros(trm.shape)
+    # H = sparse.coo_matrix(trm.shape).toarray()
 
-    for i in range(trm.shape[1]):
-        c = np.max(trm[:,i])
-        H[:,i] = np.exp(trm[:,i]-c) / sum(np.exp(trm[:,i]-c))
+    # for i in range(trm.shape[1]):
+    #     c = np.max(trm[:,i])
+    #     H[:,i] = np.exp(trm[:,i]-c) / sum(np.exp(trm[:,i]-c))
+
+    # print(max(trm))
+    H = softmax(trm-trm.max(0), axis=0)
 
     return H
 
@@ -72,12 +79,16 @@ def compute_cost_function(X, Y, theta, lambda_factor, temp_parameter):
     k = theta.shape[0]
     sq_err = 0
 
-    for i in range(n):
-        for j in range(k):
-            if Y[i] == j:
-                sq_err += -(1/n) * log_probs[j,i]
+    # for i in range(n):
+    #     for j in range(k):
+    #         if Y[i] == j:
+    #             sq_err += -(1/n) * log_probs[j,i]
 
-    c = sq_err + regul
+    for i in range(n):
+        sq_err += log_probs[Y[i],i]
+    # sq_err = -(1/n) * np.sum()
+
+    c = -(1/n) * sq_err + regul
 
     return c
 
@@ -101,18 +112,26 @@ def run_gradient_descent_iteration(X, Y, theta, alpha, lambda_factor, temp_param
         theta - (k, d) NumPy array that is the final value of parameters theta
     """
     #YOUR CODE HERE
+
     n,d = X.shape
-    grad_J = np.zeros(d)
-    probs = compute_probabilities(X, theta, temp_parameter)
+    k = theta.shape[0]
+    M = sparse.coo_matrix(([1]*n, (Y, range(n))), shape=(k,n)).toarray()
 
-    for m in range(d):
-        for i in range(n):
-            grad_J[m] += -1/(temp_parameter*n) * (X[i,m] * ((Y[i]==m) - probs[m,i])) +\
-                lambda_factor * theta[m]
+    # H - (k,n)
+    grad_J = -1 / (temp_parameter*n) * \
+        (M - compute_probabilities(X, theta, temp_parameter)) @ X + lambda_factor * theta
+    # (k,n) * (n,d) = (k,d)
 
-    theta = theta - alpha * grad_J
-
+    theta -= alpha * grad_J
     return theta
+
+    # print(f"k={k} d={d}")
+
+    # for m in range(k):
+    #     for i in range(n):
+    #         # grad_J[m] is d-dimensional
+    #         grad_J[m] += (X[i] * ((Y[i]==m) - probs[m,i])) +\
+    #             lambda_factor * theta[m]
 
     raise NotImplementedError
 
@@ -134,6 +153,8 @@ def update_y(train_y, test_y):
                     for each datapoint in the test set
     """
     #YOUR CODE HERE
+    train_y_mod3, test_y_mod3 = train_y % 3, test_y % 3
+    return train_y_mod3, test_y_mod3
     raise NotImplementedError
 
 def compute_test_error_mod3(X, Y, theta, temp_parameter):
@@ -152,6 +173,9 @@ def compute_test_error_mod3(X, Y, theta, temp_parameter):
         test_error - the error rate of the classifier (scalar)
     """
     #YOUR CODE HERE
+    assigned_labels = get_classification(X, theta, temp_parameter) % 3
+    return 1 - np.mean(assigned_labels == (Y%3))
+    
     raise NotImplementedError
 
 def softmax_regression(X, Y, temp_parameter, alpha, lambda_factor, k, num_iterations):

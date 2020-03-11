@@ -7,6 +7,10 @@ def project_onto_PC(X, pcs, n_components, feature_means):
     Given principal component vectors pcs = principal_components(X)
     this function returns a new data array in which each sample in X
     has been projected onto the first n_components principcal components.
+
+    X - (n,d)
+    pcs - (d,d)
+    feature_means - (d,)
     """
     # TODO: first center data using the feature_means
     # TODO: Return the projection of the centered dataset
@@ -16,6 +20,10 @@ def project_onto_PC(X, pcs, n_components, feature_means):
     #       of the eigenvectors returned by principal_components().
     #       Note that each eigenvector is already be a unit-vector,
     #       so the projection may be done using matrix multiplication.
+
+    X_center = X - feature_means
+    return X_center @ pcs[:,0:n_components]
+
     raise NotImplementedError
 
 
@@ -131,7 +139,7 @@ def plot_PC(X, pcs, labels):
     the corresponding image.
     labels = a numpy array containing the digits corresponding to each image in X.
     """
-    pc_data = project_onto_PC(X, pcs, n_components=2)
+    pc_data = project_onto_PC(X, pcs, n_components=2, feature_means=X.mean(axis=0))
     text_labels = [str(z) for z in labels.tolist()]
     fig, ax = plt.subplots()
     ax.scatter(pc_data[:, 0], pc_data[:, 1], alpha=0, marker=".")
