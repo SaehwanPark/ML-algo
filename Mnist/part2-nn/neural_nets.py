@@ -59,18 +59,24 @@ class NeuralNetwork():
         ### Forward propagation ###
         input_values = np.matrix([[x1],[x2]]) # 2 by 1
 
-        # Calculate the input and activation of the hidden layer
-        hidden_layer_weighted_input = # TODO (3 by 1 matrix)
-        hidden_layer_activation = # TODO (3 by 1 matrix)
+        vec_relu = np.vectorize(rectified_linear_unit)
 
-        output =  # TODO
-        activated_output = # TODO
+        # Calculate the input and activation of the hidden layer
+        hidden_layer_weighted_input = self.input_to_hidden_weight @ input_values + self.biases # TODO (3 by 1 matrix)
+        hidden_layer_activation = vec_relu(hidden_layer_weighted_input) # TODO (3 by 1 matrix)
+
+        output =  self.hidden_to_output_weights @ hidden_layer_activation # TODO -- 1x3 * 3x1 = 1x1 (scalar)
+        activated_output = output_layer_activation(output)# TODO
 
         ### Backpropagation ###
 
         # Compute gradients
-        output_layer_error = # TODO
-        hidden_layer_error = # TODO (3 by 1 matrix)
+
+        vec_relu_deri = np.vectorize(rectified_linear_unit_derivative)
+
+        output_layer_error = 0.5 * (y - activated_output)**2 # TODO
+        hidden_layer_error = output_layer_error \
+            * np.multiply(self.hidden_to_output_weights.T, vec_relu_deri(hidden_layer_weighted_input)) # TODO (3 by 1 matrix)
 
         bias_gradients = # TODO
         hidden_to_output_weight_gradients = # TODO
