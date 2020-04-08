@@ -20,7 +20,7 @@ class MLP(nn.Module):
         self.flatten = Flatten()
         
         # TODO initialize model layers here
-        self.fc1 = nn.Linear(784, 64)
+        self.fc1 = nn.Linear(1176, 64)
         self.fc2_1 = nn.Linear(64, 10)
         self.fc2_2 = nn.Linear(64, 10)
 
