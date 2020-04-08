@@ -62,8 +62,10 @@ class NeuralNetwork():
         vec_relu = np.vectorize(rectified_linear_unit)
 
         # Calculate the input and activation of the hidden layer
-        hidden_layer_weighted_input = self.input_to_hidden_weight @ input_values + self.biases # TODO (3 by 1 matrix)
+        hidden_layer_weighted_input = self.input_to_hidden_weights @ input_values + self.biases # TODO (3 by 1 matrix)
         hidden_layer_activation = vec_relu(hidden_layer_weighted_input) # TODO (3 by 1 matrix)
+
+        # print(self.hidden_to_output_weights, hidden_layer_activation)
 
         output =  self.hidden_to_output_weights @ hidden_layer_activation # TODO -- 1x3 * 3x1 = 1x1 (scalar)
         activated_output = output_layer_activation(output)# TODO
@@ -71,40 +73,57 @@ class NeuralNetwork():
         ### Backpropagation ###
 
         # Compute gradients
-
         vec_relu_deri = np.vectorize(rectified_linear_unit_derivative)
 
-        output_layer_error = 0.5 * (y - activated_output)**2 # TODO
-        hidden_layer_error = output_layer_error \
+        output_layer_error = (activated_output - y) * output_layer_activation_derivative(output) # TODO / loss <> error!
+
+        hidden_layer_error = output_layer_error.item() \
             * np.multiply(self.hidden_to_output_weights.T, vec_relu_deri(hidden_layer_weighted_input)) # TODO (3 by 1 matrix)
 
-        bias_gradients = # TODO
-        hidden_to_output_weight_gradients = # TODO
-        input_to_hidden_weight_gradients = # TODO
+        bias_gradients = (activated_output - y).item() \
+            * np.multiply(vec_relu_deri(hidden_layer_weighted_input), self.hidden_to_output_weights.T) # TODO
+        hidden_to_output_weight_gradients = (activated_output - y).item() * hidden_layer_activation # TODO
+        input_to_hidden_weight_gradients = (activated_output - y).item() \
+            * np.multiply(vec_relu_deri(hidden_layer_weighted_input), self.hidden_to_output_weights.T) \
+            * input_values.T # TODO
 
         # Use gradients to adjust weights and biases using gradient descent
-        self.biases = # TODO
-        self.input_to_hidden_weights = # TODO
-        self.hidden_to_output_weights = # TODO
+        self.biases = self.biases - self.learning_rate * bias_gradients # TODO
+        self.input_to_hidden_weights = self.input_to_hidden_weights \
+            - self.learning_rate * input_to_hidden_weight_gradients # TODO
+        self.hidden_to_output_weights = self.hidden_to_output_weights \
+            - self.learning_rate * hidden_to_output_weight_gradients.T # TODO
+
 
     def predict(self, x1, x2):
 
         input_values = np.matrix([[x1],[x2]])
 
+        vec_relu = np.vectorize(rectified_linear_unit)
+
         # Compute output for a single input(should be same as the forward propagation in training)
-        hidden_layer_weighted_input = # TODO
-        hidden_layer_activation = # TODO
-        output = # TODO
-        activated_output = # TODO
+        hidden_layer_weighted_input = self.input_to_hidden_weights @ input_values + self.biases # TODO (3 by 1 matrix)
+        hidden_layer_activation = vec_relu(hidden_layer_weighted_input) # TODO (3 by 1 matrix)
+        output =  self.hidden_to_output_weights @ hidden_layer_activation # TODO -- 1x3 * 3x1 = 1x1 (scalar)
+        activated_output = output_layer_activation(output)# TODO
 
         return activated_output.item()
 
     # Run this to train your neural network once you complete the train method
     def train_neural_network(self):
+        print("Training set = ", self.training_points)
 
         for epoch in range(self.epochs_to_train):
+
+            # print("\nEpoch ",epoch)
+
             for x,y in self.training_points:
                 self.train(x[0], x[1], y)
+
+                # print("(Input -> Hidden) weights: ", self.input_to_hidden_weights)
+                # print("(Hidden -> Output) weights: ", self.hidden_to_output_weights)
+                # print("Biases: ", self.biases)
+                # print("\n")
 
     # Run this to test your neural network implementation for correctness after it is trained
     def test_neural_network(self):
@@ -118,8 +137,12 @@ class NeuralNetwork():
                 return
 
 x = NeuralNetwork()
-
+# x.epochs_to_train = 1
 x.train_neural_network()
 
+# y = NeuralNetwork()
+# y.training_points = [((-5, -9), -14), ((2, -3), -1), ((-2, 8), 6), ((-7, -1), -8), ((5, -3), 2), ((-1, 3), 2), ((1, -7), -6), ((-1, -3), -4), ((8, 9), 17), ((2, -9), -7)]
+# y.train_neural_network()
+
 # UNCOMMENT THE LINE BELOW TO TEST YOUR NEURAL NETWORK
-# x.test_neural_network()
+x.test_neural_network()

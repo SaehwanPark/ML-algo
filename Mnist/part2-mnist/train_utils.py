@@ -11,7 +11,10 @@ class Flatten(nn.Module):
     """A custom layer that views an input as 1D."""
 
     def forward(self, input):
-        return input.view(input.size(0), -1)
+        #print(input.shape)
+        ret_value = input.view(input.size(0), -1)
+        #print(ret_value.shape)
+        return ret_value
 
 # Helpers
 def batchify_data(x_data, y_data, batch_size):

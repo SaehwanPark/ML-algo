@@ -14,6 +14,18 @@ from utils import *
 from train_utils import batchify_data, run_epoch, train_model
 
 def main():
+    val_accs = []
+    val_accs.append(test_grid())
+    val_accs.append(test_grid(batch_size=64))
+    val_accs.append(test_grid(lr=0.01))
+    val_accs.append(test_grid(momentum=0.9))
+    val_accs.append(test_grid(LeakyReLU=True))
+    print(val_accs)
+
+def test_grid(batch_size=32, lr=0.1, momentum=0, LeakyReLU=False):
+    np.random.seed(12321)  # for reproducibility
+    torch.manual_seed(12321)  # for reproducibility
+
     # Load the dataset
     num_classes = 10
     X_train, y_train, X_test, y_test = get_MNIST_data()
@@ -30,12 +42,7 @@ def main():
     X_train = [X_train[i] for i in permutation]
     y_train = [y_train[i] for i in permutation]
 
-    val_accs = []
-
-def test1(): # baseline
     # Split dataset into batches
-    batch_size = 32
-    # batch_size = 64
 
     train_batches = batchify_data(X_train, y_train, batch_size)
     dev_batches = batchify_data(X_dev, y_dev, batch_size)
@@ -43,16 +50,18 @@ def test1(): # baseline
 
     #################################
     ## Model specification TODO
-    model = nn.Sequential(
-              nn.Linear(784, 10),
+    model_relu = nn.Sequential(
+              nn.Linear(784, 128),
               nn.ReLU(),
-              # nn.LeakyReLU(),
-              nn.Linear(10, 10),
+              nn.Linear(128, 10),
             )
-    lr=0.1
-    # lr = 0.01
-    momentum=0
-    # momentum = 0.9
+    model_lrelu = nn.Sequential(
+              nn.Linear(784, 128),
+              nn.LeakyReLU(),
+              nn.Linear(128, 10),
+            )
+
+    model = model_lrelu if LeakyReLU else model_relu
     ##################################
 
     val_acc = train_model(train_batches, dev_batches, model, lr=lr, momentum=momentum)
@@ -65,6 +74,4 @@ def test1(): # baseline
 
 if __name__ == '__main__':
     # Specify seed for deterministic behavior, then shuffle. Do not change seed for official submissions to edx
-    np.random.seed(12321)  # for reproducibility
-    torch.manual_seed(12321)  # for reproducibility
     main()
