@@ -11,11 +11,11 @@ DEBUG = False
 GAMMA = 0.5  # discounted factor
 TRAINING_EP = 0.5  # epsilon-greedy parameter for training
 TESTING_EP = 0.05  # epsilon-greedy parameter for testing
-NUM_RUNS = 10
+NUM_RUNS = 5
 NUM_EPOCHS = 600
 NUM_EPIS_TRAIN = 25  # number of episodes for training at each epoch
 NUM_EPIS_TEST = 50  # number of episodes for testing
-ALPHA = 0.001  # learning rate for training
+ALPHA = 0.01  # learning rate for training
 
 ACTIONS = framework.get_actions()
 OBJECTS = framework.get_objects()
@@ -46,8 +46,14 @@ def epsilon_greedy(state_vector, theta, epsilon):
         (int, int): the indices describing the action/object to take
     """
     # TODO Your code here
-    action_index, object_index = None, None
-    return (action_index, object_index)
+    if np.random.binomial(1, epsilon)==1:
+        action_index = np.random.randint(low=0, high=NUM_ACTIONS)
+        object_index = np.random.randint(low=0, high=NUM_OBJECTS)
+    else:
+        action_index, object_index = np.unravel_index(
+            np.argmax(theta @ state_vector), (NUM_ACTIONS, NUM_OBJECTS))
+
+    return (int(action_index), int(object_index))
 # pragma: coderesponse end
 
 
@@ -68,8 +74,17 @@ def linear_q_learning(theta, current_state_vector, action_index, object_index,
     Returns:
         None
     """
-    # TODO Your code here
-    theta = None # TODO Your update here
+    
+    if terminal:
+        maxQ=0
+    else:
+        maxQ=np.max(theta @ next_state_vector)
+
+    Q_val = (theta @ current_state_vector)[tuple2index(action_index, object_index)]
+
+    y = reward + GAMMA*maxQ
+
+    theta[tuple2index(action_index, object_index)] += ALPHA*(y- Q_val)*current_state_vector
 # pragma: coderesponse end
 
 
