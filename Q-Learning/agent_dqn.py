@@ -48,7 +48,7 @@ def epsilon_greedy(state_vector, epsilon):
         act_arr, obj_arr = model(state_vector)
         action_index, object_index = torch.argmax(act_arr), torch.argmax(obj_arr)
     
-    return ((int)action_index, (int)object_index)
+    return (int(action_index), int(object_index))
 
 class DQN(nn.Module):
     """A simple deep Q network implementation.
